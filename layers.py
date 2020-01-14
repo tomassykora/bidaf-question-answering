@@ -45,7 +45,7 @@ class Embedding(nn.Module):
         ch = self.char_embed(ch)
         ch = F.dropout(ch, self.drop_prob, self.training)
 
-        c_emb = self.cnn(sentence_length, ch.permute(0, 2, 1), batch_size)
+        c_emb = self.cnn(ch.permute(0, 2, 1), sentence_length, batch_size)
 
         concat_emb = torch.cat((c_emb, emb), 2)
 
@@ -62,12 +62,12 @@ class CNN(nn.Module):
     def __init__(self, embed_size, hidden_size):
         super(CNN, self).__init__()
         self.hidden_size = hidden_size
-        self.conv1d_1 = nn.Conv1d(embed_size, hidden_size, kernel_size=3, bias=True)
-        self.conv1d_2 = nn.Conv1d(hidden_size, hidden_size, kernel_size=5, bias=True)
+        self.conv1d_1 = nn.Conv1d(embed_size, hidden_size, kernel_size=5, bias=True)
+        self.conv1d_2 = nn.Conv1d(hidden_size, hidden_size, kernel_size=3, bias=True)
 
     def forward(self, x, sentence_length, batch_size):
         conv_1 = self.conv1d_1(x)
-        conv_out_1 = torch.max(F.relu(conv_1), dim=-1)
+        conv_out_1 = F.relu(conv_1)
         # conv_out_1 = torch.max(F.relu(conv_1), dim=-1)[0]
         # conv_out_1 = conv_out_1.view(batch_size, sentence_length, self.hidden_size)
 
@@ -75,7 +75,7 @@ class CNN(nn.Module):
         conv_out_2 = torch.max(F.relu(conv_2), dim=-1)[0]
         conv_out_2 = conv_out_2.view(batch_size, sentence_length, self.hidden_size)
 
-        return x_conv_out
+        return conv_out_2
 
 
 class HighwayEncoder(nn.Module):
