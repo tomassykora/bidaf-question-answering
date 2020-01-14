@@ -30,14 +30,13 @@ class Embedding(nn.Module):
         self.embed = nn.Embedding.from_pretrained(word_vectors)
         self.char_embed = nn.Embedding.from_pretrained(char_vectors)
         self.proj = nn.Linear(word_vectors.size(1), hidden_size, bias=False)
-        self.hwy = HighwayEncoder(2, 2 * hidden_size)
-        self.cnn = CNN(embed_size=char_vectors.size(1), hidden_size=hidden_size)
+        self.cnn = CNN(in_channels=char_vectors.size(1), out_channels=hidden_size)
+        self.hwy = HighwayEncoder(2, 3 * hidden_size)
 
     def forward(self, w, ch):
         emb = self.embed(w)   # (batch_size, seq_len, embed_size)
         emb = F.dropout(emb, self.drop_prob, self.training)
         emb = self.proj(emb)  # (batch_size, seq_len, hidden_size)
-        # emb = self.hwy(emb)   # (batch_size, seq_len, hidden_size)
 
         batch_size, sentence_length, max_word_length = ch.size()
 
@@ -45,11 +44,13 @@ class Embedding(nn.Module):
         ch = self.char_embed(ch)
         ch = F.dropout(ch, self.drop_prob, self.training)
 
-        c_emb = self.cnn(ch.permute(0, 2, 1), sentence_length, batch_size)
+        c_emb1 = self.cnn(ch.permute(0, 2, 1), sentence_length, batch_size)
 
-        concat_emb = torch.cat((c_emb, emb), 2)
+        concat_emb = torch.cat((c_emb1, emb), 2)
 
-        return self.hwy(concat_emb)
+        hwy_out = self.hwy(concat_emb)
+
+        return hwy_out
 
 
 class CNN(nn.Module):
@@ -59,23 +60,26 @@ class CNN(nn.Module):
         hidden_size (int): Size of hidden activations.
         drop_prob (float): Probability of zero-ing out activations
     """
-    def __init__(self, embed_size, hidden_size):
+    def __init__(self, in_channels, out_channels):
         super(CNN, self).__init__()
-        self.hidden_size = hidden_size
-        self.conv1d_1 = nn.Conv1d(embed_size, hidden_size, kernel_size=5, bias=True)
-        self.conv1d_2 = nn.Conv1d(hidden_size, hidden_size, kernel_size=3, bias=True)
+        self.out_channels = out_channels
+        self.conv1d_1 = nn.Conv1d(in_channels, out_channels, kernel_size=5, bias=True)
+        self.conv1d_2 = nn.Conv1d(out_channels, out_channels, kernel_size=3, bias=True)
 
     def forward(self, x, sentence_length, batch_size):
         conv_1 = self.conv1d_1(x)
-        conv_out_1 = F.relu(conv_1)
-        # conv_out_1 = torch.max(F.relu(conv_1), dim=-1)[0]
-        # conv_out_1 = conv_out_1.view(batch_size, sentence_length, self.hidden_size)
+        conv_1 = F.relu(conv_1)
 
-        conv_2 = self.conv1d_2(conv_out_1)
+        conv_out_1 = torch.max(F.relu(conv_1), dim=-1)[0]
+        conv_out_1 = conv_out_1.view(batch_size, sentence_length, self.out_channels)
+
+        conv_2 = self.conv1d_2(conv_1)
         conv_out_2 = torch.max(F.relu(conv_2), dim=-1)[0]
-        conv_out_2 = conv_out_2.view(batch_size, sentence_length, self.hidden_size)
+        conv_out_2 = conv_out_2.view(batch_size, sentence_length, self.out_channels)
 
-        return conv_out_2
+        concat_conv = torch.cat((conv_out_1, conv_out_2), 2)
+
+        return concat_conv
 
 
 class HighwayEncoder(nn.Module):

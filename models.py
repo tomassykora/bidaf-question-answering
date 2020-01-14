@@ -32,7 +32,7 @@ class BiDAF(nn.Module):
     """
     def __init__(self, word_vectors, char_vectors, hidden_size, drop_prob=0.):
         super(BiDAF, self).__init__()
-        self.hidden_size = 2 * hidden_size  # resizing due to char embeddings
+        self.hidden_size = 3 * hidden_size  # resizing due to char embeddings
         self.emb = layers.Embedding(word_vectors=word_vectors,
                                     char_vectors=char_vectors,
                                     hidden_size=hidden_size,
