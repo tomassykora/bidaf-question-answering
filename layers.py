@@ -65,16 +65,23 @@ class CNN(nn.Module):
         self.out_channels = out_channels
         self.conv1d_1 = nn.Conv1d(in_channels, out_channels, kernel_size=5, bias=True)
         self.conv1d_2 = nn.Conv1d(out_channels, out_channels, kernel_size=3, bias=True)
+        self.conv1_bn = nn.BatchNorm1d(out_channels)
+        self.conv2_bn = nn.BatchNorm1d(out_channels)
 
     def forward(self, x, sentence_length, batch_size):
         conv_1 = self.conv1d_1(x)
         conv_1 = F.relu(conv_1)
+        #conv_1 = self.conv1_bn(conv_1)
+        conv1 = F.dropout(conv_1, 0.3, self.training)
+        conv_1 = self.conv1_bn(conv_1)
 
-        conv_out_1 = torch.max(F.relu(conv_1), dim=-1)[0]
+        conv_out_1 = torch.max(conv_1, dim=-1)[0]
         conv_out_1 = conv_out_1.view(batch_size, sentence_length, self.out_channels)
 
         conv_2 = self.conv1d_2(conv_1)
-        conv_out_2 = torch.max(F.relu(conv_2), dim=-1)[0]
+        conv_2 = F.relu(conv_2)
+        conv_2 = self.conv2_bn(conv_2)
+        conv_out_2 = torch.max(conv_2, dim=-1)[0]
         conv_out_2 = conv_out_2.view(batch_size, sentence_length, self.out_channels)
 
         concat_conv = torch.cat((conv_out_1, conv_out_2), 2)
