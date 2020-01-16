@@ -11,6 +11,6 @@ Character embedding layers | EM | F1 |
 2-layer cnn emb + residual | 60.46 | 63.65 
 2-layer cnn emb + residual + batch norm. | 63.17 | 66.55 
 
-This project is originally from [CS224n](http://web.stanford.edu/class/cs224n/) (winter 2020), but solved for Brno University of Technology, Faculty of Information Technologies, course [ZPJa](https://www.fit.vut.cz/study/course/13531/) - Natural Language Processing.
+This project is originally from the [CS224n](http://web.stanford.edu/class/cs224n/)Stanford course (winter 2020), but solved for the course [ZPJa](https://www.fit.vut.cz/study/course/13531/)- Natural Language Processing at Brno University of Technology, Faculty of Information Technologies.
 
 Based on the paper - [Bidirectional Attention Flow for Machine Comprehension](https://arxiv.org/abs/1611.01603) (2018).
