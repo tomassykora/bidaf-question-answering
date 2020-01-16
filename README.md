@@ -6,8 +6,8 @@ Proposed improvements of 4.94 and 5.11 percentage points in EM and F1 scores res
 
 Character embedding layers | EM | F1 |
 --- | --- | --- |
-1-layer cnn emb | 58.23 | 61.44
-2-layer cnn emb + residual | 59.57 | 62.90 
+course baseline | 58.23 | 61.44
+1-layer cnn emb + residual | 59.57 | 62.90 
 2-layer cnn emb + residual | 60.46 | 63.65 
 2-layer cnn emb + residual + batch norm. | 63.17 | 66.55 
 
